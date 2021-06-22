@@ -1,6 +1,10 @@
 # Sudoku
-C++ implementation of a sudoku solver with in-depth explanation about solution generation and DSA part
+Python implementation of a sudoku solver with in-depth explanation about solution generation and DSA part
 # Data Structure 
-# Object-oriented methods
-# Visualizer-pipeline
 
+# Algorithm
+
+ 
+# Visualizer-pipeline (PyQT)
+
+# Installation and Running
