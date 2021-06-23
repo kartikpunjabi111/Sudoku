@@ -1,11 +1,9 @@
 import sys
 from PyQt5 import QtCore, QtGui, QtWidgets
-NO_OF_ROWS = 3
-NO_OF_COLUMN = 3
-
+SIZE = 9
 class LoadTable(QtWidgets.QTableWidget):
     def __init__(self, parent=None):
-        super(LoadTable, self).__init__(NO_OF_ROWS, NO_OF_COLUMN, parent)
+        super(LoadTable, self).__init__(SIZE, SIZE, parent)
         self.setFont(QtGui.QFont("Helvetica", 10, QtGui.QFont.Normal, italic=False))   
 
         self.verticalHeader().hide()
@@ -13,34 +11,73 @@ class LoadTable(QtWidgets.QTableWidget):
         self.horizontalHeader().setSectionResizeMode(QtWidgets.QHeaderView.Fixed)
 
         self.setSelectionMode(QtWidgets.QAbstractItemView.NoSelection)
-        self.setColumnWidth(0, 130)
+        for r in range(SIZE):
+            self.setColumnWidth(r, 40)
 
         combox_lay = QtWidgets.QLabel(self)
-        self.setCellWidget(0, NO_OF_COLUMN, combox_lay)
+        self.setCellWidget(0, SIZE, combox_lay)
         # self.cellChanged.connect(self._row)
 
+
     def _row(self):
-        row = self.rowCount()
-        column = self.columnCount()
-        read = [NO_OF_ROWS*NO_OF_COLUMN]
-        for r in range(row):
-            for c in range(column):
+        read      = [[0 for i in range(SIZE)] for i in range(SIZE)]
+        row_check = [[False for i in range(SIZE)] for i in range(SIZE) ]
+        col_check = [[False for i in range(SIZE)] for i in range(SIZE) ]
+        box_check = [[[False for i in range(SIZE)] for i in range(3)] for i in range(3)]
+
+
+        for r in range(SIZE):
+            for c in range(SIZE):
                 it = self.item(r,c)
                 if it:
                     text = it.text()
-                    read[r*NO_OF_COLUMN+c] = text
-                               
+                    read[r][c] = int(text)
 
-        #  Solve Sudoku (Main )
+        def solver(i,j):
+            i,j = int(i),int(j)
+            if i==SIZE:
+                return True
+            nextRow,nextCol = int((SIZE*i+j+1)/SIZE),int((SIZE*i+j+1)%SIZE)
+            
+            if read[i][j]!=0:
+                return solver(nextRow,nextCol)
+            
+            for val in range(1,SIZE+1):
+                if (row_check[i][val-1] or col_check[j][val-1] or box_check[int(i/3)][int(j/3)][val-1]):
+                    continue
+                row_check[i][val-1] = True
+                col_check[j][val-1] = True
+                box_check[int(i/3)][int(j/3)][val-1] = True
+                read[i][j] = val
+                if solver(nextRow , nextCol)==True:
+                    return True
+                row_check[i][val-1] = False
+                col_check[j][val-1] = False
+                box_check[int(i/3)][int(j/3)][val-1] = False
+                read[i][j] = 0
+            
+            return False
+        
+        def solveSudoku(read):
+            for r in range(SIZE):
+                for c in range(SIZE):
+                    if read[r][c] != 0:
+                        col_check[c][read[r][c]-1] = True
+                        row_check[r][read[r][c]-1] = True
+                        box_check[int(r/3)][int(c/3)][read[r][c]-1] = True
 
+            return solver(0,0)
 
-        answer  = ['1', '1', '1', '1', '1', '1', '1', '1', '1']
+        check = solveSudoku(read)
 
-        # Set Values in table ()
-        for r in range(row):
-            for c in range(column):
-                fill_this = answer[r*NO_OF_COLUMN+c]
-                self.setItem(r,c,QtWidgets.QTableWidgetItem(fill_this))      
+        if check==True:
+            for r in range(SIZE):
+                for c in range(SIZE):
+                    self.setItem(r,c,QtWidgets.QTableWidgetItem(str(read[r][c])))      
+        else:
+            for r in range(SIZE):
+                for c in range(SIZE):
+                    self.setItem(r,c,QtWidgets.QTableWidgetItem(str(0)))      
 
 
 class ThirdTabLoads(QtWidgets.QWidget):
